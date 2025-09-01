@@ -46,6 +46,11 @@ app.get("/api/ice", (req, res) => {
       { urls: "stun:stun2.l.google.com:19302" },
       { urls: "stun:stun3.l.google.com:19302" },
       { urls: "stun:stun4.l.google.com:19302" },
+         {
+        urls: "turn:relay1.expressturn.com:3480",
+        username: "000000002072091133",
+        credential: "LA7FoOlnS9RCyDolDq1JqoUmAxI="
+      }
     ],
   });
 });
