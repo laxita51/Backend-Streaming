@@ -1,4 +1,3 @@
-// backend/socket/signaling.js
 const rooms = new Map(); 
 // Map<roomId, { publisherId: string|null, viewers: Set<string> }>
 
@@ -20,7 +19,7 @@ export function registerSignaling(io) {
       const room = rooms.get(roomId);
 
       if (role === "publisher") {
-        // Enforce one publisher per room
+        // one publisher per room
         if (room.publisherId && room.publisherId !== socket.id) {
           socket.emit("room-error", { message: "Publisher already exists in this room" });
           return;
@@ -61,12 +60,12 @@ export function registerSignaling(io) {
       if (!room) return;
 
       if (role === "publisher" && room.publisherId === socket.id) {
-        // Tear down: tell viewers publisher left
+        // tell viewers publisher left
         io.to(joinedRoom).emit("publisher-left");
         room.publisherId = null;
       } else if (role === "viewer") {
         room.viewers.delete(socket.id);
-        // Inform publisher that viewer left (optional)
+        // Inform publisher that viewer left
         if (room.publisherId) {
           io.to(room.publisherId).emit("viewer-left", { viewerId: socket.id });
         }

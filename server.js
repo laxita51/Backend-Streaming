@@ -11,29 +11,33 @@ connectDB();
 
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: [
+const getAllowedOrigins = () => {
+  const origins = [
     "http://localhost:5173",
-    "http://10.97.145.176:5173/",
-    process.env.FRONTEND_ORIGIN || "http://localhost:5173",
-  ],
+    "http://10.97.145.176:5173",
+    process.env.FRONTEND_ORIGIN
+  ].filter(Boolean); 
+  
+  return [...new Set(origins)];
+};
+
+const allowedOrigins = getAllowedOrigins();
+console.log('🔄 Allowed CORS origins:', allowedOrigins);
+
+const corsConfig = {
+  origin: allowedOrigins,
   credentials: true,
 };
 
-// Apply CORS globally
-app.use(cors(corsOptions));
+app.use(cors(corsConfig));
 app.use(express.json());
 
-// Routes
 app.use("/api/auth", authRoutes);
 
-// ICE config endpoint (frontend calls this) - Add explicit CORS
-app.options("/api/ice", cors(corsOptions)); // Handle preflight requests
-app.get("/api/ice", cors(corsOptions), (req, res) => {
+// ICE config endpoint
+app.get("/api/ice", (req, res) => {
   console.log('ICE endpoint called');
   
-  // STUN only for now (good for demo). Add TURN later for reliability.
   res.json({
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
@@ -47,26 +51,30 @@ app.get("/api/ice", cors(corsOptions), (req, res) => {
 });
 
 app.get("/", (_req, res) => {
-  res.send("API is running...");
+  res.json({ 
+    message: "API is running...",
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Create HTTP server and attach Socket.IO
+// Create HTTP server
 const server = http.createServer(app);
 
+// Socket.IO configuration
 import { Server } from "socket.io";
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      process.env.FRONTEND_ORIGIN || "http://localhost:5173", // Changed from "*" to match your origin
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-// Register signaling namespace/handlers
+// Register signaling
 registerSignaling(io);
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+});

@@ -1,6 +1,8 @@
 import User from "../models/User.js";
 import { generateToken } from "../utils/jwt.js";
 import {successResponse,errorResponse,badRequest,unauthorized,notFound, serverError} from '../utils/response.js'
+
+
 // @desc Register new user
 // @route POST /api/auth/register
 export const registerUser = async (req, res) => {
